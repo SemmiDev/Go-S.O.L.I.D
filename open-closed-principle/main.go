@@ -5,55 +5,57 @@ import (
 	"math"
 )
 
-type (
-	circle struct {
-		radius float64
-	}
-	square struct {
-		length float64
-	}
-	triangle struct {
-		height float64
-		base   float64
-	}
-	shape interface {
-		area() float64
-	}
-	calculator struct {}
-)
+type circle struct {
+	Radius float64
+}
+
+type square struct {
+	Length float64
+}
+
+type triangle struct {
+	Height float64
+	Base   float64
+}
+
+type calculator struct{}
+
+type shape interface {
+	area() float64
+}
 
 func (c circle) area() float64 {
-	return math.Pi * c.radius * c.radius
+	return math.Pi * c.Radius * c.Radius
 }
 
 func (s square) area() float64 {
-	return s.length * s.length
+	return s.Length * s.Length
 }
 
 func (t triangle) area() float64 {
-	return t.base * t.height / 2
+	return t.Base * t.Height / 2
 }
 
 func (a calculator) areaSum(shapes ...shape) {
 	for _, shape := range shapes {
 		switch shape.(type) {
-			case circle:
-				fmt.Println("circle : ", shape.area())
-			case square:
-				fmt.Println("square : ",shape.area())
-			case triangle:
-				fmt.Println("rectangle : ",shape.area())
-			default:
-				fmt.Println("not found")
+		case *circle:
+			fmt.Println("circle : ", shape.area())
+		case *square:
+			fmt.Println("square : ", shape.area())
+		case *triangle:
+			fmt.Println("rectangle : ", shape.area())
+		default:
+			fmt.Println("not found")
 		}
 	}
 }
 
-func main(){
+func main() {
 
-	c := circle{radius: 20}
-	s := square{length: 37}
-	t := triangle{height: 2, base: 10}
+	c := &circle{Radius: 20}
+	s := &square{Length: 37}
+	t := &triangle{Height: 2, Base: 10}
 
 	calc := calculator{}
 	calc.areaSum(c, s, t)

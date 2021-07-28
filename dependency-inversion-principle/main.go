@@ -3,21 +3,26 @@ package main
 import "fmt"
 
 type (
-	MySQL struct {}
-	PostgreSQL struct {}
+	MySQL struct {
+	}
+
+	PostgreSQL struct {
+	}
+
 	DBCOnn interface {
 		Query() interface{}
 	}
+
 	UsersRepository struct {
 		db DBCOnn
 	}
 )
 
-func (db MySQL) Query() interface{} {
+func (db *MySQL) Query() interface{} {
 	return []string{"sammidev", "sam", "dev"}
 }
 
-func (db PostgreSQL) Query() interface{} {
+func (db *PostgreSQL) Query() interface{} {
 	return map[string]string{
 		"a3f69c2b-d153-48fd-b10c-5b641657477a": "sammidev",
 		"a4f69c2b-d153-48fd-b10c-5b641657477b": "sam",
@@ -41,12 +46,12 @@ func (r UsersRepository) GetUsers() []string {
 
 	return []string{}
 }
-func main(){
+func main() {
 	mysqlDB := MySQL{}
 	postgreDB := PostgreSQL{}
 
-	repo1 := UsersRepository{db: mysqlDB}
-	repo2 := UsersRepository{db: postgreDB}
+	repo1 := UsersRepository{db: &mysqlDB}
+	repo2 := UsersRepository{db: &postgreDB}
 
 	fmt.Println("mySQL : ", repo1.GetUsers())
 	fmt.Println("postgreSQL : ", repo2.GetUsers())

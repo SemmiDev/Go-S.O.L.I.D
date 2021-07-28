@@ -2,53 +2,54 @@ package main
 
 import "fmt"
 
-type (
-	human struct {
-		name string
-	}
-	teacher struct {
-		human
-		degree string
-		salary float64
-	}
-	student struct {
-		human
-		grades map[string]int
-	}
-	person interface {
-		getName() string
-	}
-	printer struct {}
-)
-
-func (h human) getName() string {
-	return h.name
+type Human struct {
+	Name string
 }
 
-func (printer) info(p person) {
-	fmt.Println("Name: ", p.getName())
+type teacher struct {
+	*Human
+	Degree string
+	Salary float64
 }
 
-func main(){
-	h := human{name: "sam"}
+type Student struct {
+	*Human
+	grades map[string]int
+}
 
-	s := student{
-		human:  human{name: "sammidev"},
+type Person interface {
+	name() string
+}
+
+type Printer struct{}
+
+func (h Human) name() string {
+	return h.Name
+}
+
+func (Printer) info(p Person) {
+	fmt.Println("Name: ", p.name())
+}
+
+func main() {
+	h := Human{Name: "sam"}
+
+	s := Student{
+		Human: &Human{Name: "sammidev"},
 		grades: map[string]int{
-			"Math":    10,
-			"English": 10,
+			"Math":    100,
+			"English": 100,
 		},
 	}
+
 	t := teacher{
-		human:  human{name: "dev"},
-		degree: "CS",
-		salary: 2000,
+		Human:  &Human{Name: "dev"},
+		Degree: "CS",
+		Salary: 2000000000,
 	}
 
-	p := printer{}
-
-	p.info(h)
-	p.info(s)
-	p.info(t)
-
+	p := Printer{}
+	p.info(&h)
+	p.info(&s)
+	p.info(&t)
 }

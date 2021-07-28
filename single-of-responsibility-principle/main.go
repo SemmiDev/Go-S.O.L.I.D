@@ -9,59 +9,57 @@ import (
 	"strconv"
 )
 
-type (
-	Square struct {
-		length float64
-	}
+type Square struct {
+	Length float64
+}
 
-	Circle struct {
-		radius float64
-	}
+type Circle struct {
+	Radius float64
+}
 
-	Rectangle struct {
-		x float64
-		y float64
-	}
+type Rectangle struct {
+	Long float64
+	Wide float64
+}
 
-	outputter struct {}
+type Output struct{}
 
-	Shape interface {
-		area() float64
-		name() string
-	}
-)
+type Shape interface {
+	name() string
+	area() float64
+}
 
 func (c Circle) name() string {
 	return "circle"
-}
-
-func (c Circle) area() float64 {
-	return math.Pi * math.Pow(c.radius,2)
 }
 
 func (s Square) name() string {
 	return "square"
 }
 
-func (s Square) area() float64 {
-	return math.Pow(s.length,2)
-}
-
 func (r Rectangle) name() string {
 	return "rectangle"
 }
 
-func (r Rectangle) area() float64 {
-	return r.x * r.y
+func (c *Circle) area() float64 {
+	return math.Pi * math.Pow(c.Radius, 2)
 }
 
-func (out outputter) Text(s Shape) string {
+func (s *Square) area() float64 {
+	return math.Pow(s.Length, 2)
+}
+
+func (r *Rectangle) area() float64 {
+	return r.Long * r.Wide
+}
+
+func (out *Output) Text(s Shape) string {
 	return fmt.Sprintf("area  of the %s: %f", s.name(), s.area())
 }
 
-func (out outputter) JSON(s Shape) string {
+func (out *Output) JSON(s Shape) string {
 	res := struct {
-		Name string `json:"shape"`
+		Name string  `json:"shape"`
 		Area float64 `json:"area"`
 	}{
 		Name: s.name(),
@@ -76,42 +74,62 @@ func (out outputter) JSON(s Shape) string {
 }
 
 func main() {
+	out := Output{}
 
-	out := outputter{}
+	server := http.NewServeMux()
+	server.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		endpoints := "- localhost:9090/rectangle?wide=2&long=3\n" +
+			"- localhost:9090/circle?radius=2\n" +
+			"- localhost:9090/square?s=4"
 
-	http.HandleFunc("/rectangle", out.rectangle)
-	http.HandleFunc("/circle", out.circle)
-	http.HandleFunc("/square", out.square)
+		_, _ = w.Write([]byte(endpoints))
+	})
+	server.HandleFunc("/rectangle", out.rectangle)
+	server.HandleFunc("/circle", out.circle)
+	server.HandleFunc("/square", out.square)
 
-	log.Println("STARTING :9090")
-	_ = http.ListenAndServe(":9090", nil)
+	log.Println("LISTEN ON PORT 9090")
+	_ = http.ListenAndServe(":9090", server)
+}
+
+func (out *Output) circle(w http.ResponseWriter, r *http.Request) {
+	rCONV, _ := strToFloat(r.URL.Query().Get("radius"))
+
+	result := Circle{rCONV}
+	log.Println(out.Text(&result))
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write([]byte(out.JSON(&result)))
+}
+
+func (out *Output) square(w http.ResponseWriter, r *http.Request) {
+	sCONV, _ := strToFloat(r.URL.Query().Get("s"))
+
+	result := Square{sCONV}
+	log.Println(out.Text(&result))
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write([]byte(out.JSON(&result)))
+}
+
+func (out *Output) rectangle(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
+	xCONV, _ := strToFloat(r.URL.Query().Get("long"))
+	yCONV, _ := strToFloat(r.URL.Query().Get("wide"))
+
+	result := Rectangle{xCONV, yCONV}
+	log.Println(out.Text(&result))
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write([]byte(out.JSON(&result)))
 }
 
 func strToFloat(floatInString string) (result float64, err error) {
-	result, err =  strconv.ParseFloat(floatInString, 32)
+	result, err = strconv.ParseFloat(floatInString, 32)
 	return
-}
-
-func (out outputter) rectangle(w http.ResponseWriter, r *http.Request) {
-	xCONV, _  := strToFloat(r.URL.Query().Get("x"))
-	yCONV, _  := strToFloat(r.URL.Query().Get("y"))
-
-	result := Rectangle{xCONV, yCONV}
-	log.Println(out.Text(result))
-	_, _ = w.Write([]byte(out.JSON(result)))
-}
-
-func (out outputter) circle(w http.ResponseWriter, r *http.Request) {
-	rCONV, _  := strToFloat(r.URL.Query().Get("r"))
-	result := Circle{rCONV}
-	log.Println(out.Text(result))
-	_, _ = w.Write([]byte(out.JSON(result)))
-}
-
-func (out outputter) square(w http.ResponseWriter, r *http.Request) {
-	sCONV, _  := strToFloat(r.URL.Query().Get("s"))
-
-	result := Square{sCONV}
-	log.Println(out.Text(result))
-	_, _ = w.Write([]byte(out.JSON(result)))
 }
